@@ -31,36 +31,33 @@ class PostList extends CBitrixComponent
 
         $arSelectFields=array(
             "IBLOCK_ID",
-            "ID",
-            "PROPERTY_VOTED_USERS"
-        );
-        $arSelectFields1=array(
-            "IBLOCK_ID",
-            "ID",
-            "PROPERTY_AUTOR"
+            "ID"
         );
 
-        $newVotedUsers = CIBlockElement::GetList($arOrder,$arFilter,false,false,$arSelectFields)->GetNextElement()->GetProperty("VOTED_USERS")["VALUE"];
-        $postAutor=CIBlockElement::GetList($arOrder,$arFilter,false,false,$arSelectFields1)->GetNextElement()->GetProperty("AUTOR")["VALUE"];
+        $votedPostProps = CIBlockElement::GetList($arOrder,$arFilter,false,false,$arSelectFields)->GetNextElement()->GetProperties();
+//        dump($votedPostProps);
 
+        if (!in_array($USER->GetID(),$votedPostProps["VOTED_USERS"]["VALUE"])&&($USER->GetID()!=$votedPostProps["AUTOR"]["VALUE"])) {
+            if ($votedPostProps["VOTED_USERS"]["VALUE"]){
+                array_push($votedPostProps["VOTED_USERS"]["VALUE"], $USER->GetID());
+            } else
+                $votedPostProps["VOTED_USERS"]["VALUE"]=$USER->GetID();
 
-        if (!in_array($USER->GetID(),$newVotedUsers)||($USER->GetID()!=$postAutor)) {
-            array_push($newVotedUsers, $USER->GetID());
             if ($_GET['VOTE'] == 'PLUS') {
                 $arLoadVoteResultArray = Array(
-                    'PLUSES_COUNT' => $_GET["PLUSES_COUNT"] + 1,
-                    'VOTE_RESULT' => $_GET["RANK_VALUE"] + 1,
-                    "VOTED_USERS" => $newVotedUsers
+                    'PLUSES_COUNT' => $votedPostProps["PLUSES_COUNT"]["VALUE"] + 1,
+                    'VOTE_RESULT' => $votedPostProps["VOTE_RESULT"]["VALUE"] + 1,
+                    "VOTED_USERS" => $votedPostProps["VOTED_USERS"]["VALUE"],
                 );
             } else {
                 $arLoadVoteResultArray = Array(
-                    'MINUSES_COUNT' => $_GET["MINUSES_COUNT"] + 1,
-                    'VOTE_RESULT' => $_GET["RANK_VALUE"] - 1,
-                    "VOTED_USERS" => $newVotedUsers
+                    'MINUSES_COUNT' => $votedPostProps["MINUSES_COUNT"]["VALUE"] + 1,
+                    'VOTE_RESULT' => $votedPostProps["VOTE_RESULT"]["VALUE"] - 1,
+                    "VOTED_USERS" => $votedPostProps["VOTED_USERS"]["VALUE"],
                 );
             }
 
-            CIBlockElement::SetPropertyValuesEx($_GET["ITEM_ID"], 5, $arLoadVoteResultArray);
+            CIBlockElement::SetPropertyValuesEx($_GET["ITEM_ID"], $this->arParams["IBLOCK_ID"], $arLoadVoteResultArray);
         }
 
 
@@ -100,7 +97,7 @@ class PostList extends CBitrixComponent
             "bShowAll" => $this->arParams["PAGER_SHOW_ALL"],
         );
 
-        if ($raitingFilter!='INF'){
+        if ($raitingFilter && $raitingFilter!='INF'){
             $arFilter=array(
                 ">=PROPERTY_VOTE_RESULT"=>$raitingFilter,
                 "IBLOCK_ID"=>$this->arParams['IBLOCK_ID']
@@ -110,7 +107,7 @@ class PostList extends CBitrixComponent
                 "IBLOCK_ID"=>$this->arParams['IBLOCK_ID']
             );
 
-            $this->arResult["ITEMS"] = array();
+        $this->arResult["ITEMS"] = array();
         $this->arResult["ELEMENTS"] = array();
 
         $rsElement = CIBlockElement::GetList($arSort, $arFilter, false, $arNavParams, $arSelect);
@@ -156,7 +153,7 @@ class PostList extends CBitrixComponent
         try {
             $this->checkRequiredModules();
         } catch (Exception $e) {
-            CModule::IncludeModule('iblock');
+            return;
         }
 
         $this->voteModify();

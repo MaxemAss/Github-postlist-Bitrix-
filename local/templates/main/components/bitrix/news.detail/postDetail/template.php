@@ -23,7 +23,7 @@ $this->setFrameMode(true);
 				<span class="user-info__nickname user-info__nickname_small"><?=$arResult["PROPERTIES"]["AUTOR"]['LOGIN'];?></span>
 			</a>
 
-			<span class="post__time" data-time_published="2019-03-25T02:27Z">
+			<span class="post__time">
 						<?=$arResult['ACTIVE_FROM'];?>
 			</span>
 

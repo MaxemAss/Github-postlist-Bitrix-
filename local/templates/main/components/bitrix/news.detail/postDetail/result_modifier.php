@@ -10,6 +10,3 @@ $timeStmp=MakeTimeStamp($arResult['ACTIVE_FROM']);
 if (($postDay=dateNormalView($timeStmp))){
     $arResult['ACTIVE_FROM'] = $postDay.' в '.date('H:i',$timeStmp);
 } else $arResult['ACTIVE_FROM'] = date('d.m.Y',$timeStmp).' в '.date('H:i',$timeStmp);
-
-
-?>
